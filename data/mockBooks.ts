@@ -65,10 +65,14 @@ export const mockBooks: Book[] = [
     title: 'The Alchemist',
     author: 'Paulo Coelho',
     coverUrl: 'https://covers.openlibrary.org/b/id/8231432-L.jpg',
-    status: 'available',
+    status: 'donated',
     pages: 208,
     rating: 4.3,
     description: 'The Alchemist follows a young Andalusian shepherd named Santiago in his journey to Egypt, after having a recurring dream of finding treasure there.',
     intraLogin: 'amufleh'
   },
 ];
+export const mockUser = {
+  username: 'amufleh',
+  avatarUrl: 'https://api.dicebear.com/7.x/avataaars/png?seed=amufleh',
+};

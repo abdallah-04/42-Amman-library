@@ -5,6 +5,7 @@ import ThemedText from '@/components/ThemedText';
 import SearchBar from '@/components/SearchBar';
 import BookGridCard from '@/components/BookGridCard';
 import { mockBooks } from '@/data/mockBooks';
+import { router } from 'expo-router';
 
 export default function LibraryScreen() {
   const [search, setSearch] = useState('');
@@ -23,7 +24,6 @@ export default function LibraryScreen() {
 
         ListHeaderComponent={
           <View style={{ paddingTop: 16, marginBottom: 8 }}>
-            {/* <ThemedText variant="h1">Library</ThemedText> */}
             <SearchBar value={search} onChangeText={setSearch} />
           </View>
         }
@@ -31,7 +31,10 @@ export default function LibraryScreen() {
         renderItem={({ item }) => (
           <BookGridCard
             book={item}
-            onPress={() => console.log('pressed', item.title)}
+            onPress={() => router.push({
+              pathname: '/BookDetailScreen',
+              params: {id: item.id}
+            })}
           />
         )}
 

@@ -30,8 +30,8 @@ export default function DashLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.surface,
-          height: 90,
-          paddingTop: 10,
+          height: 75,
+          paddingTop: 6,
           paddingBottom: 10,
           borderTopWidth: 0,
           elevation: 0, 

@@ -11,7 +11,7 @@ export interface Book
     title: string;
     author: string;
     coverUrl: string;
-    status: 'available' | 'borrowed';
+    status: 'available' | 'borrowed' | 'donated';
     pages: number;
     rating: number;
     borrowedBy?: string;
