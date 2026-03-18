@@ -1,45 +1,38 @@
-import { StyleSheet, TouchableOpacity } from 'react-native'
-import React from 'react'
-import ThemedText from './ThemedText'
-import ThemedView from './ThemedView'
+import { TouchableOpacity, StyleSheet } from 'react-native';
+import ThemedText from './ThemedText';
 import { colors } from '@/constants/Colors';
 
-interface PrimaryButtonProps
-{
-    label : string;
-    onPress : () => void;
-    color ?: string;
-    disabeld : boolean;
-    radius?: number;
-
+interface PrimaryButtonProps {
+  label: string;
+  onPress: () => void;
+  color?: string;
+  disabled?: boolean
+  radius?: number;
 }
 
 export default function PrimaryButton({
-    label,
-    onPress,
-    color = colors.primary,
-    disabeld = false,
-    radius = 24,
-
-    }: PrimaryButtonProps) 
-{
-
-    return (
-        <TouchableOpacity 
-        style={[
-            styles.button,
-            { backgroundColor: color, borderRadius: radius },
-            disabeld && styles.disabled,
-        ]}
-        onPress={onPress}
-        disabled={disabeld}
-        activeOpacity={0.8}
-        >
-            <ThemedText variant="button" color="white" center>
-                {label}
-            </ThemedText>
-        </TouchableOpacity>
-        );
+  label,
+  onPress,
+  color = colors.primary,
+  disabled = false,
+  radius = 24,
+}: PrimaryButtonProps) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.button,
+        { backgroundColor: color, borderRadius: radius },
+        disabled && styles.disabled,
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+      activeOpacity={0.8}
+    >
+      <ThemedText variant="button" color="white" center>
+        {label}
+      </ThemedText>
+    </TouchableOpacity>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -52,6 +45,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.6,
   },
 });

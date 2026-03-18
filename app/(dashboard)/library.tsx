@@ -24,6 +24,10 @@ export default function LibraryScreen() {
 
         ListHeaderComponent={
           <View style={{ paddingTop: 16, marginBottom: 8 }}>
+            
+           {/* <ThemedText variant="h2" >
+              Library
+            </ThemedText> */}
             <SearchBar value={search} onChangeText={setSearch} />
           </View>
         }

@@ -63,16 +63,18 @@ export default function ThemedView({
             )}
           </ScrollView>
         ) : (
-          <View style={[styles.flex, style]}>
-            {children}
+    <View style={[styles.flex, style]}>
+  <   View style={styles.contentLayer}>
+    {children}
+  </View>
 
-            {showAmman && (
-              <View style={styles.cityAbsolute} pointerEvents="none">
-                <ImageBackground
-                  source={AmmanCity}
-                  style={styles.cityImage}
-                  resizeMode="cover"
-                />
+  {showAmman && (
+    <View style={styles.cityAbsolute} pointerEvents="none">
+      <ImageBackground
+        source={AmmanCity}
+        style={styles.cityImage}
+        resizeMode="cover"
+      />
               </View>
             )}
           </View>
@@ -112,11 +114,16 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     width: width,
-    height: 200,
+    height: 190,
     opacity: 0.7,
+    zIndex: 0
   },
   cityImage: {
     width: '100%',
     height: '100%',
   },
+  contentLayer: {
+  flex: 1,
+  zIndex: 1,
+},
 });

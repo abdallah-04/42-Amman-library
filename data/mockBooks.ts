@@ -74,5 +74,5 @@ export const mockBooks: Book[] = [
 ];
 export const mockUser = {
   username: 'amufleh',
-  avatarUrl: 'https://api.dicebear.com/7.x/avataaars/png?seed=amufleh',
+  avatarUrl: 'https://drive.google.com/uc?export=view&id=1Q__xXg7b6JeMIW4Y4J8leyzgNmoOob7A',
 };

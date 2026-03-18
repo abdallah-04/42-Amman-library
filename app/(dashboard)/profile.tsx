@@ -14,6 +14,7 @@ import { colors } from '@/constants/Colors';
 import { mockBooks, mockUser } from '@/data/mockBooks';
 import { Book } from '@/components/BookGridCard';
 import { router } from 'expo-router';
+import Spacer from '@/components/Spacer';
 
 interface BookActionCardProps
 {
@@ -97,8 +98,9 @@ export default function ProfileScreen() {
 
   const ListHeader = () => (
     <View>
-      <ThemedText variant="h1" style={styles.title}>profile</ThemedText>
+      {/* <ThemedText variant="h1" style={styles.title} center>profile</ThemedText> */}
 
+      <Spacer/>
       <View style={styles.avatarSection}>
         <View style={styles.avatarRing}>
           <Image
