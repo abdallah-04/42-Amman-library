@@ -13,6 +13,7 @@ import BookCover from '@/components/BookCover';
 import { colors } from '@/constants/Colors';
 import { mockBooks, mockUser } from '@/data/mockBooks';
 import { Book } from '@/components/BookGridCard';
+import { router } from 'expo-router';
 
 interface BookActionCardProps
 {
@@ -32,7 +33,6 @@ function BookActionCard({
   return(
 <View style={cardStyles.container}>
 
-      {/* Left — book cover */}
       <BookCover
         imageUrl={book.coverUrl}
         width={70}
@@ -40,7 +40,6 @@ function BookActionCard({
         radius={8}
       />
 
-      {/* Right — info + button */}
       <View style={cardStyles.info}>
         <ThemedText variant="bookTitle" numberOfLines={1}>
           {book.title}
@@ -52,7 +51,6 @@ function BookActionCard({
           Borrowed: {book.borrowDate ?? 'Unknown'}
         </ThemedText>
 
-        {/* Action button — full width below text */}
         <TouchableOpacity
           style={[cardStyles.actionButton, { backgroundColor: buttonColor }]}
           onPress={onAction}
@@ -124,7 +122,10 @@ export default function ProfileScreen() {
             key={book.id}
             book={book}
             buttonLabel="Return"
-            onAction={() => console.log('Return:', book.title)}
+            onAction={() =>router.push({
+              pathname: '/RateReview',
+              params: {id: book.id}
+            })}
           />
         ))
       ) : (
