@@ -32,7 +32,7 @@ export default function BookGridCard({ book, onPress }: BookGridCardProps)
             activeOpacity={0.9}
         >
             <BookCover 
-                imageUrl={"https://drive.google.com/file/d/1emtZ-yC0KGPFrjzmA0RyUbXYzWYwlGG9/view?usp=sharing"} 
+                imageUrl={"https://drive.google.com/uc?export=download&id=1emtZ-yC0KGPFrjzmA0RyUbXYzWYwlGG9"} 
                 width={165}
                 height={220}
             />

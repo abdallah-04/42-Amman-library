@@ -17,8 +17,8 @@ export default function BookCover({
   return (
     <View style={[styles.shadow, { width, height, borderRadius: radius }]}>
       <Image
-        source={require('D:/Borrow_books/assets/images/The_Midnight_Library.jpg')}
-        style={[styles.image, { borderRadius: radius }]}
+      source={{ uri: imageUrl }}        
+      style={[styles.image, { borderRadius: radius }]}
         resizeMode="cover"
       />
     </View>

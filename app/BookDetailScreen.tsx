@@ -84,7 +84,7 @@ export default function BooksDetailScreen()
                         label={book.status === 'borrowed' ? 'Already Borrowed' : 'Borrow'}
                         color={colors.primaryLight}
                         disabled={book.status === 'borrowed'}
-                        onPress={() => console.log('Borrow pressed:', book.title)} disabeld={false}
+                        onPress={() => console.log('Borrow pressed:', book.title)} disabled={false}
                         />
              </View>
              
