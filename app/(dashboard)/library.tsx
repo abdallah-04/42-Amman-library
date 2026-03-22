@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, View } from 'react-native';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
@@ -6,8 +6,20 @@ import SearchBar from '@/components/SearchBar';
 import BookGridCard from '@/components/BookGridCard';
 import { mockBooks } from '@/data/mockBooks';
 import { router } from 'expo-router';
+import { getAllBooks } from '@/services/api';
 
 export default function LibraryScreen() {
+  useEffect(() => 
+{
+  getAllBooks().then(data =>
+  {
+    console.log('Books from API:', data);
+  }
+  ).catch(err => 
+  {
+   console.log('API Error:', err.message);
+  });
+}, []);
   const [search, setSearch] = useState('');
 
   const filteredBooks = mockBooks.filter(book =>
