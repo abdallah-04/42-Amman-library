@@ -1,96 +1,152 @@
-import React, { useState } from 'react';
-import { ScrollView, View, TouchableOpacity, StyleSheet } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import ThemedView from '@/components/ThemedView';
-import ThemedText from '@/components/ThemedText';
-import BackButton from '@/components/BackButton';
-import BookCover from '@/components/BookCover';
-import AvailabilityBadge from '@/components/AvailabilityBadge';
-import BookStatsRow from '@/components/BookStatsRow';
-import PrimaryButton from '@/components/PrimaryButton';
-import { mockBooks } from '@/data/mockBooks';
-import { colors } from '@/constants/Colors';
+import AvailabilityBadge from "@/components/AvailabilityBadge";
+import BackButton from "@/components/BackButton";
+import BookCover from "@/components/BookCover";
+import { Book } from "@/components/BookGridCard";
+import BookStatsRow from "@/components/BookStatsRow";
+import PrimaryButton from "@/components/PrimaryButton";
+import ThemedText from "@/components/ThemedText";
+import ThemedView from "@/components/ThemedView";
+import { colors } from "@/constants/Colors";
+import { getBook } from "@/services/api";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+} from "react-native";
 
-export default function BooksDetailScreen()
-{
-    const {id} = useLocalSearchParams<{id : string}>();
-    const book = mockBooks.find(b => b.id === id);
-    const [expanded, setExpanded] = useState(false);
+function mapStringBook(item: any): Book {
+  return {
+    id: item.documentId,
+    title: item.title ?? "",
+    author: item.author ?? "",
+    coverUrl: item.coverUrl ?? "",
+    state: item.state ?? "available",
+    pages: item.pages ?? 0,
+    rating: item.rating ?? 0,
+    description: item.description ?? "",
+    borrowedBy: item.borrowedBy,
+    borrowDate: item.borrowDate,
+    added_by: item.added_by ?? "",
+  };
+}
 
-    if (!book)
-    {
-        return(
-            <ThemedView>
-                <BackButton onPress={() => router.back()}/>
-                <ThemedText variant='body'center>
-                    Book not found
-                </ThemedText>
-            </ThemedView>
-        )
+export default function BooksDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [book, setBook] = useState<Book | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    loadBook();
+  }, []);
+
+  async function loadBook() {
+    setLoading(true);
+    setError("");
+    try {
+      console.log("Loading book with id:", id);
+      const data = await getBook(id);
+      console.log("Book data received:", data);
+      setBook(mapStringBook(data));
+    } catch (err) {
+      console.log("Error loading book:", err);
+      setError("Failed to load book.");
+    } finally {
+      setLoading(false);
     }
-    return(
-        <ThemedView showAmman={false}>
-            <ScrollView 
-            showsVerticalScrollIndicator = {false}
-            contentContainerStyle = {styles.scrollContent}
-            >
-                <BackButton onPress={() => router.back()}/>
+  }
 
-                <View style={styles.coverContainer}>
-                    <BookCover
-                        imageUrl={book.coverUrl}
-                        width={209}
-                        height={294}
-                    />
-                </View>
+  if (loading) {
+    return (
+      <ThemedView>
+        <ActivityIndicator
+          size="large"
+          color={colors.primary}
+          style={{ flex: 1, marginTop: 100 }}
+        />
+      </ThemedView>
+    );
+  }
+  if (error || !book) {
+    return (
+      <ThemedView>
+        <BackButton onPress={() => router.back()} />
+        <ThemedText
+          variant="body"
+          color="primary"
+          center
+          style={{ marginTop: 40 }}
+        >
+          {error || "Book not found"}
+        </ThemedText>
+      </ThemedView>
+    );
+  }
 
-                <View style={styles.centered}>
-                    <AvailabilityBadge status={book.status}/>
-                </View>
+  return (
+    <ThemedView showAmman={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <BackButton onPress={() => router.back()} />
 
-                <ThemedText variant='h2' center style={styles.title}>
-                    {book.title}
-                </ThemedText>
+        <View style={styles.coverContainer}>
+          <BookCover imageUrl={book.coverUrl} width={209} height={294} />
+        </View>
 
-                <ThemedText variant='byline' color='primary' center>
-                    By {book.author}
-                </ThemedText>
-                
-                <BookStatsRow
-                    rating={book.rating}
-                    pages={book.pages}
-                    intraLogin={book.intraLogin}
-                />
+        <View style={styles.centered}>
+          <AvailabilityBadge state={book.state} />
+        </View>
 
-                <ThemedText variant='h3' color='primary' style={styles.aboutHeading}>
-                    About
-                </ThemedText>
+        <ThemedText variant="h2" center style={styles.title}>
+          {book.title}
+        </ThemedText>
 
-                <ThemedText
-                    variant='body'
-                    numberOfLines={expanded ? undefined : 3}
-                    style={styles.description}
-                >
-                    {book.description ?? 'No description available.'}
-                </ThemedText>
-                <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-                    <ThemedText variant='link' color='primary'>
-                        {expanded ? 'Read less ∧' : 'Read more ∨'}
-                    </ThemedText>
-                </TouchableOpacity>
-                <View style={styles.buttonContainer}>
+        <ThemedText variant="byline" color="primary" center>
+          By {book.author}
+        </ThemedText>
 
-                    <PrimaryButton
-                        label={book.status === 'borrowed' ? 'Already Borrowed' : 'Borrow'}
-                        color={colors.primaryLight}
-                        disabled={book.status === 'borrowed'}
-                        onPress={() => console.log('Borrow pressed:', book.title)} disabled={false}
-                        />
-             </View>
-             
-            </ScrollView>
-        </ThemedView>
-    )
+        <BookStatsRow
+          rating={book.rating}
+          pages={book.pages}
+          intraLogin={book.added_by ?? "N/A"}
+        />
+
+        <ThemedText variant="h3" color="primary" style={styles.aboutHeading}>
+          About
+        </ThemedText>
+
+        <ThemedText
+          variant="body"
+          numberOfLines={expanded ? undefined : 3}
+          style={styles.description}
+        >
+          {book.description || "No description available."}
+        </ThemedText>
+
+        <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+          <ThemedText variant="link" color="primary">
+            {expanded ? "Read less ∧" : "Read more ∨"}
+          </ThemedText>
+        </TouchableOpacity>
+
+        <View style={styles.buttonContainer}>
+          <PrimaryButton
+            label={book.state === "borrowed" ? "Already Borrowed" : "Borrow"}
+            color={colors.primaryLight}
+            disabled={book.state === "borrowed"}
+            onPress={() => console.log("Borrow:", book.title)}
+          />
+        </View>
+      </ScrollView>
+    </ThemedView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -100,12 +156,12 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   coverContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
     marginBottom: 12,
   },
   centered: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 12,
   },
   title: {
@@ -114,6 +170,7 @@ const styles = StyleSheet.create({
   },
   aboutHeading: {
     marginBottom: 8,
+    marginTop: 16,
   },
   description: {
     lineHeight: 24,

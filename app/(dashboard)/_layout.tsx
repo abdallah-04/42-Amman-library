@@ -16,7 +16,7 @@ const tabs = [
     iconOutline: 'person-outline' as const,
   },
   {
-    name: 'create',
+    name: 'addBooks',
     title: 'Add Book',
     icon: 'add-circle' as const,
     iconOutline: 'add-circle-outline' as const,

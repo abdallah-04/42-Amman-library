@@ -19,6 +19,7 @@ import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import PrimaryButton from '@/components/PrimaryButton';
 import { colors } from '@/constants/Colors';
+import { addBook } from '@/services/api';
 
 interface OpenLibraryBook {
   key: string;
@@ -132,22 +133,37 @@ function SearchMode() {
     return `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
   }
 
-  function handleSelectBook(book: OpenLibraryBook) {
-    Alert.alert(
-      'Add Book',
-      `Add "${book.title}" to the library?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Add',
-          onPress: () => {
-            console.log('Adding:', book);
+async function handleSelectBook(book: OpenLibraryBook) {
+  Alert.alert(
+    'Add Book',
+    `Add "${book.title}" to the library?`,
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Add',
+        onPress: async () => {
+          try {
+            await addBook({
+              title: book.title,
+              author: book.author_name?.[0] ?? 'Unknown',
+              pages: book.number_of_pages_median ?? 0,
+              state: 'available',
+              rating: 2,
+              coverUrl: book.cover_i
+                ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+                : '',
+            });
+
+            Alert.alert('Success', 'Book added!');
             router.back();
-          },
+          } catch (err) {
+            Alert.alert('Error', 'Failed to add book');
+          }
         },
-      ]
-    );
-  }
+      },
+    ]
+  );
+}
 
   return (
     <View style={searchStyles.container}>
@@ -286,7 +302,7 @@ function ManualMode() {
     }
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!title.trim()) {
       Alert.alert('Missing Field', 'Please enter the book title.');
       return;
@@ -295,21 +311,25 @@ function ManualMode() {
       Alert.alert('Missing Field', 'Please enter the author name.');
       return;
     }
+    try {
+      await addBook({
+        title:       title.trim(),
+        author:      author.trim(),
+        description: description.trim(),
+        state:      'available',
+        coverUrl:    coverImage || '',
+      });
 
-    const newBook = {
-      title:       title.trim(),
-      author:      author.trim(),
-      description: description.trim(),
-      coverImage,
-    };
-
-    console.log('New book:', newBook);
-    Alert.alert(
-      'Success!',
-      `"${newBook.title}" added to library!`,
-      [{ text: 'OK', onPress: () => router.back() }]
-    );
-  }
+      Alert.alert(
+        'Success!',
+        `"${title}" added to library!`,
+        [{ text: 'OK', onPress: () => router.back() }]
+        );
+    } 
+    catch {
+      Alert.alert('Error', 'Failed to add book. Try again.');
+    }
+}
 
   return (
     <View style={manualStyles.wrapper}>
