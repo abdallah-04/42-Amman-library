@@ -20,6 +20,7 @@ import ThemedText from '@/components/ThemedText';
 import PrimaryButton from '@/components/PrimaryButton';
 import { colors } from '@/constants/Colors';
 import { addBook } from '@/services/api';
+import SuccessModal from '@/components/SuccessModal';
 
 interface OpenLibraryBook {
   key: string;
@@ -94,6 +95,8 @@ function SearchMode() {
   const [results, setResults]   = useState<OpenLibraryBook[]>([]);
   const [loading, setLoading]   = useState(false);
   const [searched, setSearched] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [addedTitle, setAddedTitle]   = useState('');
 
   useEffect(() => {
     if (!query.trim()) {
@@ -153,9 +156,8 @@ async function handleSelectBook(book: OpenLibraryBook) {
                 ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
                 : '',
             });
-
-            Alert.alert('Success', 'Book added!');
-            router.back();
+              setAddedTitle(book.title);
+              setShowSuccess(true);
           } catch (err) {
             Alert.alert('Error', 'Failed to add book');
           }
@@ -268,6 +270,16 @@ async function handleSelectBook(book: OpenLibraryBook) {
         )}
 
       </View>
+          <SuccessModal
+        visible={showSuccess}
+        title="Book Added! 🎉"
+        message={`"${addedTitle}" has been successfully added to the library.`}
+        buttonLabel="Go to Library"
+        onClose={() => {
+          setShowSuccess(false);
+          router.back();
+        }}
+      />
     </View>
   );
 }
@@ -277,6 +289,8 @@ function ManualMode() {
   const [author, setAuthor]         = useState('');
   const [description, setDesc]      = useState('');
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [addedTitle, setAddedTitle]   = useState('');
 
   async function pickImage() {
     const { status } =
@@ -320,11 +334,8 @@ function ManualMode() {
         coverUrl:    coverImage || '',
       });
 
-      Alert.alert(
-        'Success!',
-        `"${title}" added to library!`,
-        [{ text: 'OK', onPress: () => router.back() }]
-        );
+      setAddedTitle(title.trim());
+      setShowSuccess(true);
     } 
     catch {
       Alert.alert('Error', 'Failed to add book. Try again.');
@@ -400,7 +411,16 @@ function ManualMode() {
           label="Add Book to Library"
           onPress={handleSubmit} disabled={false}        />
       </View>
-
+        <SuccessModal
+          visible={showSuccess}
+          title="Book Added"
+          message={`"${addedTitle}" has been successfully added to the library.`}
+          buttonLabel="Go to Library"
+          onClose={() => {
+            setShowSuccess(false);
+            router.back();
+        }}
+      />
     </View>
   );
 }

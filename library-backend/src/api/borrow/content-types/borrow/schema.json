@@ -1,0 +1,37 @@
+{
+  "kind": "collectionType",
+  "collectionName": "borrows",
+  "info": {
+    "singularName": "borrow",
+    "pluralName": "borrows",
+    "displayName": "borrow"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "book": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::book.book"
+    },
+    "intraLogin": {
+      "type": "string"
+    },
+    "borrowDate": {
+      "type": "date"
+    },
+    "returnDate": {
+      "type": "date"
+    },
+    "rating": {
+      "type": "integer",
+      "min": 1,
+      "max": 5
+    },
+    "feedback": {
+      "type": "text"
+    }
+  }
+}

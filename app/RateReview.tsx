@@ -19,6 +19,7 @@ import PrimaryButton from '@/components/PrimaryButton';
 import { mockBooks } from '@/data/mockBooks';
 import { colors } from '@/constants/Colors';
 import Spacer from '@/components/Spacer';
+import { returnBook, updateBookStatus } from '@/services/api'
 
 interface StarRatingProps 
 {
@@ -66,7 +67,7 @@ const starStyles = StyleSheet.create({
 });
 
 export default function RateReviewScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, borrowId } = useLocalSearchParams<{ id: string; borrowId: string }>();
   const book = mockBooks.find(b => b.id === id);
   const [rating, setRating]     = useState(0);
   const [feedback, setFeedback] = useState('');
@@ -80,26 +81,34 @@ export default function RateReviewScreen() {
     );
   }
 
-  function handleReturn() {
-    if (rating === 0) {
-      Alert.alert(
-        'No Rating',
-        'Would you like to return without rating?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Return Anyway', onPress: () => router.back() },
-        ]
-      );
-      return;
-    }
-    console.log('Rating:', rating, '| Feedback:', feedback);
+  async function handleReturn() {
+  if (rating === 0) {
     Alert.alert(
-      'Book Returned!',
-      `Thank you for rating "${book.title}" ${rating}/5 ⭐`,
+      'No Rating',
+      'Would you like to return without rating?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Return Anyway', onPress: () => submitReturn(0, '') },
+      ]
+    );
+    return;
+  }
+  submitReturn(rating, feedback);
+}
+
+async function submitReturn(stars: number, comment: string) {
+  try {
+    await returnBook(borrowId || id, stars, comment);
+    await updateBookStatus(book!.id, 'available');
+    Alert.alert(
+      'Book Returned! ✅',
+      `Thank you for returning "${book!.title}"`,
       [{ text: 'OK', onPress: () => router.back() }]
     );
+  } catch {
+    Alert.alert('Error', 'Failed to return book. Try again.');
   }
-
+}
   return (
     <ThemedView showAmman={false}>
       <KeyboardAvoidingView

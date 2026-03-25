@@ -10,13 +10,16 @@ import { colors } from "@/constants/Colors";
 import { getBook } from "@/services/api";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
+import { borrowBook, updateBookStatus } from '@/services/api';
 import {
     ActivityIndicator,
+    Alert,
     ScrollView,
     StyleSheet,
     TouchableOpacity,
     View,
 } from "react-native";
+import SuccessModal from "@/components/SuccessModal";
 
 function mapStringBook(item: any): Book {
   return {
@@ -36,21 +39,24 @@ function mapStringBook(item: any): Book {
 
 export default function BooksDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const bookId = Array.isArray(id) ? id[0] : id;
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [borrowing, setBorrowing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false); 
 
   useEffect(() => {
     loadBook();
-  }, []);
+  }, [id]);
 
   async function loadBook() {
     setLoading(true);
     setError("");
     try {
       console.log("Loading book with id:", id);
-      const data = await getBook(id);
+      const data = await getBook(bookId);
       console.log("Book data received:", data);
       setBook(mapStringBook(data));
     } catch (err) {
@@ -61,6 +67,20 @@ export default function BooksDetailScreen() {
     }
   }
 
+  async function handleBorrow() {
+  if (!book || book.state === 'borrowed') return;
+
+  setBorrowing(true);
+  try {
+    await borrowBook(book.id, 'amufleh');
+    await updateBookStatus(book.id, 'borrowed');
+    setShowSuccess(true);
+  } catch {
+    Alert.alert('Error', 'Failed to borrow book. Try again.');
+  } finally {
+    setBorrowing(false);
+  }
+}
   if (loading) {
     return (
       <ThemedView>
@@ -136,15 +156,29 @@ export default function BooksDetailScreen() {
           </ThemedText>
         </TouchableOpacity>
 
-        <View style={styles.buttonContainer}>
-          <PrimaryButton
-            label={book.state === "borrowed" ? "Already Borrowed" : "Borrow"}
-            color={colors.primaryLight}
-            disabled={book.state === "borrowed"}
-            onPress={() => console.log("Borrow:", book.title)}
-          />
-        </View>
+      <View style={styles.buttonContainer}>
+        <PrimaryButton
+        label={
+          borrowing ? 'Borrowing...' :
+          book.state === 'borrowed' ? 'Already Borrowed' :
+          'Borrow'
+        }
+      color={colors.primaryLight}
+      disabled={book.state === 'borrowed' || borrowing}
+      onPress={handleBorrow}
+      />
+    </View>
       </ScrollView>
+    <SuccessModal
+      visible={showSuccess}
+      title="Book Borrowed!"
+      message={`"${book.title}" has been added to your borrowed books.`}
+      buttonLabel="Go to Library"
+      onClose={() => {
+      setShowSuccess(false);
+      router.back();
+      }}
+      />
     </ThemedView>
   );
 }

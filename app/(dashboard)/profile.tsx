@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   View,
   Image,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ThemedView from '@/components/ThemedView';
@@ -15,7 +16,8 @@ import { mockBooks, mockUser } from '@/data/mockBooks';
 import { Book } from '@/components/BookGridCard';
 import { router } from 'expo-router';
 import Spacer from '@/components/Spacer';
-
+import { getUserBorrows } from '@/services/api';
+const BASE_URL = 'http://192.168.1.15:1337/api';
 interface BookActionCardProps
 {
   book: Book;
@@ -93,9 +95,39 @@ const cardStyles = StyleSheet.create({
 });
 
 export default function ProfileScreen() {
-  const borrowedBooks = mockBooks.filter(b => b.status === 'borrowed');
-  const donatedBooks  = mockBooks.filter(b => b.status === 'donated');
+  const [borrowedBooks, setBorrowedBooks] = useState([]);
+  const [donatedBooks, setDonatedBooks]   = useState([]);
+  const [loading, setLoading]             = useState(true);
 
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+  async function loadProfileData() {
+    setLoading(true);
+    try {
+      const borrows = await getUserBorrows('amufleh');
+      setBorrowedBooks(borrows);
+      const response = await fetch(
+        `${BASE_URL}/books?filters[status][$eq]=donated`
+      );
+      const json = await response.json();
+      setDonatedBooks(json.data ?? []);
+
+    } catch {
+      console.log('Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <ThemedView>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </ThemedView>
+    );
+  }
   const ListHeader = () => (
     <View>
       {/* <ThemedText variant="h1" style={styles.title} center>profile</ThemedText> */}

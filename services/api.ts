@@ -59,24 +59,20 @@ export async function searchBooks(query: string) {
   }
 }
 
-export async function addBook(book: any) {
+export async function addBook(book: object) {
   try {
     const response = await fetch(`${BASE_URL}/books`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ data: book }),
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ data: book }),
     });
 
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Failed: ${response.status} - ${errText}`);
+      throw new Error(`Server error: ${response.status}`);
     }
 
-    return await response.json();
+    return response.json();
   } catch (error) {
-    console.error('addBook error:', error);
     throw new Error('Failed to add book');
   }
 }
@@ -116,5 +112,81 @@ export async function deleteBook(id: string) {
   } catch (error) {
     console.error('deleteBook error:', error);
     throw new Error('Failed to delete book');
+  }
+}
+
+export async function getUserBorrows(intraLogin: string) {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/borrows?filters[intraLogin][$eq]=${intraLogin}&populate=book`
+    );
+    const json = await response.json();
+    return json.data ?? [];
+  } catch (error) {
+    throw new Error('Failed to fetch borrows');
+  }
+}
+
+export async function borrowBook(bookId: string, intraLogin: string) {
+  try {
+    const response = await fetch(`${BASE_URL}/borrows`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: {
+          book:       bookId,
+          intraLogin: intraLogin,
+          borrowDate: new Date().toISOString().split('T')[0],
+        }
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed to borrow');
+    return response.json();
+  } catch (error) {
+    throw new Error('Failed to borrow book');
+  }
+}
+
+export async function returnBook(
+  borrowId: string,
+  rating: number,
+  feedback: string
+) {
+  try {
+    const response = await fetch(`${BASE_URL}/borrows/${borrowId}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: {
+          returnDate: new Date().toISOString().split('T')[0],
+          rating,
+          feedback,
+        }
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed to return');
+    return response.json();
+  } catch (error) {
+    throw new Error('Failed to return book');
+  }
+}
+
+export async function updateBookStatus(
+  bookId: string,
+  status: 'available' | 'borrowed'
+) {
+  try {
+    const response = await fetch(`${BASE_URL}/books/${bookId}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: { status } }),
+    });
+
+    if (!response.ok) throw new Error('Failed to update');
+    return response.json();
+  } catch (error) {
+    throw new Error('Failed to update book status');
   }
 }
