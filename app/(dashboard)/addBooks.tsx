@@ -155,6 +155,7 @@ async function handleSelectBook(book: OpenLibraryBook) {
               coverUrl: book.cover_i
                 ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
                 : '',
+              added_by: 'amufleh',
             });
               setAddedTitle(book.title);
               setShowSuccess(true);
@@ -332,6 +333,7 @@ function ManualMode() {
         description: description.trim(),
         state:      'available',
         coverUrl:    coverImage || '',
+        added_by:    'amufleh',
       });
 
       setAddedTitle(title.trim());

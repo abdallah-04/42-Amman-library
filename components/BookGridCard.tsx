@@ -17,6 +17,7 @@ export interface Book {
   borrowDate?: string;
   description?: string;
   added_by?: "amufleh";
+  borrowId?: string;
 }
 
 interface BookGridCardProps {
@@ -32,7 +33,7 @@ export default function BookGridCard({ book, onPress }: BookGridCardProps) {
     >
       <BookCover imageUrl={book.coverUrl} width={165} height={220} />
       <View style={styles.info}>
-        <ThemedText variant="bookTitel" numberOfLines={1}>
+        <ThemedText variant="bookTitle" numberOfLines={1}>
           {book.title}
         </ThemedText>
 

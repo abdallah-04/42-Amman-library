@@ -36,7 +36,7 @@ export default function LoginScreen() {
         <PrimaryButton
           label="Sign in with 42 Intra →"
           onPress={handleLogin}
-          radius={20} disabeld={false}        />
+          radius={20}/>
       </View>
 
     </ThemedView>

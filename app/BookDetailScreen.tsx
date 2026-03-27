@@ -135,7 +135,7 @@ export default function BooksDetailScreen() {
         <BookStatsRow
           rating={book.rating}
           pages={book.pages}
-          intraLogin={book.added_by ?? "N/A"}
+          intraLogin={book.added_by ?? 'N/A'}
         />
 
         <ThemedText variant="h3" color="primary" style={styles.aboutHeading}>
