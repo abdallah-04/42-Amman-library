@@ -147,3 +147,16 @@ export async function updateBookStatus(
     throw new Error("Failed to update book state");
   }
 }
+
+export async function getBookReviews(bookId: string) {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/borrows?filters[book][documentId][$eq]=${bookId}&filters[rating][$notNull]=true&populate=*`
+    );
+    if (!response.ok) throw new Error('Failed to fetch reviews');
+    const json = await response.json();
+    return json.data ?? [];
+  } catch (error) {
+    throw new Error('Failed to fetch reviews');
+  }
+}

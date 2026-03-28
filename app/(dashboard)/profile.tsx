@@ -23,6 +23,7 @@ import {
 } from '@/services/api';
 import { Book } from '@/components/BookGridCard';
 import { mockUser } from '@/data/mockBooks';
+import SuccessModal from '@/components/SuccessModal';
 
 const CURRENT_USER = 'amufleh';
 
@@ -103,6 +104,8 @@ export default function ProfileScreen() {
   const [borrowedBooks, setBorrowedBooks] = useState<Book[]>([]);
   const [myBooks, setMyBooks]             = useState<Book[]>([]);
   const [loading, setLoading]             = useState(true);
+  const [showSuccess, setShowSuccess]     = useState(false);
+  const [deletedTitle, setDeletedTitle]   = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -164,7 +167,8 @@ export default function ProfileScreen() {
             try {
               await deleteBook(book.id);
               setMyBooks(prev => prev.filter(b => b.id !== book.id));
-              Alert.alert('Deleted', `"${book.title}" has been removed.`);
+              setDeletedTitle(book.title);
+              setShowSuccess(true);
             } catch {
               Alert.alert('Error', 'Failed to delete book. Try again.');
             }
@@ -250,6 +254,13 @@ export default function ProfileScreen() {
         ListFooterComponent={<View style={{ height: 100 }} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+      />
+      <SuccessModal
+        visible={showSuccess}
+        title="Deleted"
+        message={`"${deletedTitle}" has been removed.`}
+        buttonLabel="OK"
+        onClose={() => setShowSuccess(false)}
       />
     </ThemedView>
   );

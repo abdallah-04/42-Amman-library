@@ -17,7 +17,7 @@ export default function BookCover({
   return (
     <View style={[styles.shadow, { width, height, borderRadius: radius }]}>
       <Image
-      source={{ uri: imageUrl }}        
+      source={imageUrl ? { uri: imageUrl } : undefined}
       style={[styles.image, { borderRadius: radius }]}
         resizeMode="cover"
       />
