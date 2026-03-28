@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { FlatList, View, ActivityIndicator, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import ThemedView from '@/components/ThemedView';
@@ -36,10 +37,11 @@ export default function LibraryScreen() {
     await loadBooks();  
     setRefreshing(false);
   };
-  useEffect(() =>
-  {
-    loadBooks();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      if (!search.trim()) loadBooks();
+    }, [])
+  );
  useEffect(() => {
     if (!search.trim()) {
       loadBooks();

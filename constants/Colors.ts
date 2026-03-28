@@ -8,6 +8,7 @@ export const colors = {
   available: '#2FA76F',
   borrowed: '#E99E35',
   white: '#FFFFFF',
+  red: '#D32F2F' ,
 
   // Custom transparent variations from specs
   badgeAvailableBg: 'rgba(47,167,111,0.36)',

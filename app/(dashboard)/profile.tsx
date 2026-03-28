@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   FlatList,
   View,
@@ -60,12 +61,12 @@ function BookActionCard({
           onPress={onAction}
         >
           {buttonLabel === 'Return' && (
-            <Ionicons name="refresh" size={14} color={colors.white} />
+            <Ionicons name="refresh" size={20} color={colors.white} />
           )}
           {buttonLabel === 'Delete' && (
-            <Ionicons name="trash-outline" size={14} color={colors.white} />
+            <Ionicons name="trash-outline" size={20} color={colors.white} />
           )}
-          <ThemedText variant="caption" color="white">
+          <ThemedText variant="caption" color="white" style={{ fontSize: 14 }}>
             {buttonLabel}
           </ThemedText>
         </TouchableOpacity>
@@ -103,9 +104,11 @@ export default function ProfileScreen() {
   const [myBooks, setMyBooks]             = useState<Book[]>([]);
   const [loading, setLoading]             = useState(true);
 
-  useEffect(() => {
-    loadProfileData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadProfileData();
+    }, [])
+  );
 
   async function loadProfileData() {
     setLoading(true);
@@ -235,7 +238,7 @@ export default function ProfileScreen() {
           <BookActionCard
             book={item}
             buttonLabel="Delete"
-            buttonColor={colors.primary}
+            buttonColor={colors.red}
             onAction={() => handleDelete(item)}
           />
         )}

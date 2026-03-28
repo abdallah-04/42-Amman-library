@@ -273,7 +273,7 @@ async function handleSelectBook(book: OpenLibraryBook) {
       </View>
           <SuccessModal
         visible={showSuccess}
-        title="Book Added! 🎉"
+        title="Book Added!"
         message={`"${addedTitle}" has been successfully added to the library.`}
         buttonLabel="Go to Library"
         onClose={() => {

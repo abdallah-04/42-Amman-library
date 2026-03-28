@@ -151,7 +151,7 @@ export default function RateReviewScreen() {
       await updateBookStatus(book!.id, 'available');
 
       Alert.alert(
-        'Book Returned! ✅',
+        'Book Returned!',
         `Thank you for returning "${book!.title}"`,
         [{ text: 'OK', onPress: () => router.back() }]
       );
