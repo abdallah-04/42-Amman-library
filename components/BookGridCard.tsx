@@ -10,7 +10,7 @@ export interface Book {
   title: string;
   author: string;
   coverUrl: string;
-  state: "available" | "borrowed" | "donated";
+  state: "available" | "borrowed";
   pages: number;
   rating: number;
   borrowedBy?: string;

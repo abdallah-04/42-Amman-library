@@ -6,8 +6,8 @@ import ThemedText from "./ThemedText";
 interface Availability {
   state: "available" | "borrowed";
 }
-export default function AvailabilityBadge({ state: status }: Availability) {
-  const isAvailable = status === "available";
+export default function AvailabilityBadge({ state }: Availability) {
+  const isAvailable = state === "available";
   const badgeColors = {
     dot: isAvailable ? colors.available : colors.borrowed,
     text: isAvailable ? "available" : "borrowed",
