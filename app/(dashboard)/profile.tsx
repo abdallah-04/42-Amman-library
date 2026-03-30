@@ -155,6 +155,15 @@ export default function ProfileScreen() {
   }
 
   async function handleDelete(book: Book) {
+    
+    if (book.state === 'borrowed') {
+    Alert.alert(
+      'Cannot Delete',
+      `"${book.title}" is currently borrowed by someone. Wait until it is returned before deleting.`,
+      [{ text: 'OK' }]
+    );
+    return;
+  }
     Alert.alert(
       'Delete Book',
       `Are you sure you want to delete "${book.title}" from the library?`,

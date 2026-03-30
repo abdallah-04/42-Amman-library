@@ -19,8 +19,8 @@ import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import PrimaryButton from '@/components/PrimaryButton';
 import { colors } from '@/constants/Colors';
-import { addBook } from '@/services/api';
 import SuccessModal from '@/components/SuccessModal';
+import { uploadImage, addBook } from '@/services/api';
 
 interface OpenLibraryBook {
   key: string;
@@ -136,6 +136,18 @@ function SearchMode() {
     return `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
   }
 
+async function fetchDescription(workKey: string): Promise<string> {
+  try {
+    const res  = await fetch(`https://openlibrary.org${workKey}.json`);
+    const data = await res.json();
+    const desc = data.description;
+    if (!desc) return '';
+    return typeof desc === 'string' ? desc : desc.value ?? '';
+  } catch {
+    return '';
+  }
+}
+
 async function handleSelectBook(book: OpenLibraryBook) {
   Alert.alert(
     'Add Book',
@@ -146,10 +158,12 @@ async function handleSelectBook(book: OpenLibraryBook) {
         text: 'Add',
         onPress: async () => {
           try {
+            const description = await fetchDescription(book.key);
             await addBook({
               title: book.title,
               author: book.author_name?.[0] ?? 'Unknown',
               pages: book.number_of_pages_median ?? 0,
+              description,
               state: 'available',
               rating: 2,
               coverUrl: book.cover_i
@@ -157,8 +171,8 @@ async function handleSelectBook(book: OpenLibraryBook) {
                 : '',
               added_by: 'amufleh',
             });
-              setAddedTitle(book.title);
-              setShowSuccess(true);
+            setAddedTitle(book.title);
+            setShowSuccess(true);
           } catch (err) {
             Alert.alert('Error', 'Failed to add book');
           }
@@ -292,6 +306,7 @@ function ManualMode() {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [addedTitle, setAddedTitle]   = useState('');
+  const [uploading, setUploading] = useState(false);
 
   async function pickImage() {
     const { status } =
@@ -327,12 +342,17 @@ function ManualMode() {
       return;
     }
     try {
+        setUploading(true);
+        let coverUrl = '';
+        if (coverImage) {
+          coverUrl = await uploadImage(coverImage);
+        }
       await addBook({
         title:       title.trim(),
         author:      author.trim(),
         description: description.trim(),
         state:      'available',
-        coverUrl:    coverImage || '',
+        coverUrl:    coverUrl || '',
         added_by:    'amufleh',
       });
 
@@ -409,10 +429,13 @@ function ManualMode() {
 
 
       <View style={manualStyles.buttonContainer}>
-        <PrimaryButton
-          label="Add Book to Library"
-          onPress={handleSubmit} disabled={false}        />
+          <PrimaryButton
+            label={uploading ? 'Uploading...' : 'Add Book to Library'}
+            onPress={handleSubmit}
+            disabled={uploading}
+          />
       </View>
+
         <SuccessModal
           visible={showSuccess}
           title="Book Added"

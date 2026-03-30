@@ -45,6 +45,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   disabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
 });

@@ -160,3 +160,49 @@ export async function getBookReviews(bookId: string) {
     throw new Error('Failed to fetch reviews');
   }
 }
+
+export async function uploadImage(imageUri: string): Promise<string> {
+  try {
+    const CLOUD_NAME = 'dj1jhzfrj';
+    const UPLOAD_PRESET = 'library_books';
+
+    const formData = new FormData();
+    const filename = imageUri.split('/').pop() ?? 'cover.jpg';
+    const match    = /\.(\w+)$/.exec(filename);
+    const type     = match ? `image/${match[1]}` : 'image/jpeg';
+
+    formData.append('file', {
+      uri:  imageUri,
+      name: filename,
+      type: type,
+    } as any);
+
+    formData.append('upload_preset', UPLOAD_PRESET);
+
+    console.log('Uploading directly to Cloudinary...');
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body:   formData,
+      }
+    );
+
+    console.log('Cloudinary response status:', response.status);
+
+    const data = await response.json();
+    console.log('Cloudinary response:', JSON.stringify(data));
+
+    if (data.error) {
+      throw new Error(data.error.message);
+    }
+
+    console.log('Upload success! URL:', data.secure_url);
+    return data.secure_url;
+
+  } catch (error) {
+    console.error('uploadImage error:', error);
+    throw new Error('Failed to upload image');
+  }
+}
