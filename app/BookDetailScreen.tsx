@@ -172,7 +172,7 @@ export default function BooksDetailScreen() {
 
    
         <BookStatsRow
-          rating={book.rating}
+          rating={book.rating || '--'}
           pages={book.pages}
           intraLogin={book.added_by || 'N/A'}
         />

@@ -1,4 +1,4 @@
-export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL!;
+export const BASE_URL = "https://library-backend-production-e8bd.up.railway.app/api";
 
 export async function getAllBooks() {
   try {

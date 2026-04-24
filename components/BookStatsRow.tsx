@@ -5,7 +5,7 @@ import ThemedText from './ThemedText';
 
 interface BookStatsRowProps
 {
-    rating: number;
+    rating: number | string;
     pages: number;
     intraLogin: string;
 }
@@ -35,14 +35,14 @@ export default function BookStatsRow({
 
     return(
         <View style={styles.container}>
-            <StatColumn label='RATING' value={`⭐ ${rating}`} />
+            <StatColumn label='Rating' value={`⭐ ${rating}`} />
               <View style={styles.divider} />
 
-            <StatColumn label="PAGES" value={`${pages}`} />
+            <StatColumn label="Pages" value={`${pages}`} />
 
              <View style={styles.divider} />
 
-             <StatColumn label="INTRA" value={intraLogin} />
+             <StatColumn label="Bought by" value={intraLogin} />
 
         </View>
     );
