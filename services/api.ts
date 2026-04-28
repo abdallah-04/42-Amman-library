@@ -1,5 +1,25 @@
 export const BASE_URL = "https://library-backend-production-e8bd.up.railway.app/api";
 
+const BORROW_PERIOD_DAYS = 30;
+
+const DEFAULT_PROGRESS = { daysElapsed: 0, daysRemaining: 30, isOverdue: false, progressPercentage: 0 };
+
+export function calculateBorrowProgress(borrowDate: string) {
+  const start = new Date(borrowDate);
+  if (isNaN(start.getTime())) return DEFAULT_PROGRESS;
+
+  start.setHours(0, 0, 0, 0);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const elapsed = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  const daysElapsed = elapsed > 0 ? elapsed : 0;
+  const isOverdue = daysElapsed > BORROW_PERIOD_DAYS;
+  const daysRemaining = isOverdue ? 0 : BORROW_PERIOD_DAYS - daysElapsed;
+  const progressPercentage = Math.min(100, Math.round((daysElapsed / BORROW_PERIOD_DAYS) * 100));
+  return { daysElapsed, daysRemaining, isOverdue, progressPercentage };
+}
+
 export async function getAllBooks() {
   try {
     const response = await fetch(`${BASE_URL}/books?populate=*`);
@@ -80,9 +100,22 @@ export async function getUserBorrows(intraLogin: string) {
     const response = await fetch(
       `${BASE_URL}/borrows?filters[intraLogin][$eq]=${intraLogin}&populate=book`,
     );
+    if (!response.ok) throw new Error(`Server error: ${response.status}`);
     const json = await response.json();
-    return json.data ?? [];
+    const borrows: any[] = json.data ?? [];
+    console.log('[getUserBorrows] total records:', borrows.length);
+    return borrows.map((borrow) => {
+      try {
+        const progress = borrow.borrowDate
+          ? calculateBorrowProgress(borrow.borrowDate)
+          : DEFAULT_PROGRESS;
+        return { ...borrow, ...progress };
+      } catch {
+        return { ...borrow, ...DEFAULT_PROGRESS };
+      }
+    });
   } catch (error) {
+    console.log('[getUserBorrows] error:', error);
     throw new Error("Failed to fetch borrows");
   }
 }

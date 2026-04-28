@@ -18,6 +18,10 @@ export interface Book {
   description?: string;
   added_by?: "amufleh";
   borrowId?: string;
+  daysElapsed?: number;
+  daysRemaining?: number;
+  isOverdue?: boolean;
+  progressPercentage?: number;
 }
 
 interface BookGridCardProps {

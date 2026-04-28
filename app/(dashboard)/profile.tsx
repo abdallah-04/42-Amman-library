@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import BookCover from '@/components/BookCover';
+import BorrowTimerCard from '@/components/BorrowTimerCard';
 import { colors } from '@/constants/Colors';
 import {
   BASE_URL,
@@ -32,6 +33,7 @@ interface BookActionCardProps {
   buttonLabel: string;
   buttonColor?: string;
   onAction: () => void;
+  children?: React.ReactNode;
 }
 
 function BookActionCard({
@@ -39,51 +41,61 @@ function BookActionCard({
   buttonLabel,
   buttonColor = colors.primary,
   onAction,
+  children,
 }: BookActionCardProps) {
   return (
     <View style={cardStyles.container}>
-      <BookCover imageUrl={book.coverUrl} width={70} height={100} radius={8} />
-      <View style={cardStyles.info}>
-        <ThemedText variant="bookTitle" numberOfLines={1}>
-          {book.title}
-        </ThemedText>
-        <ThemedText variant="author" opacity={0.8}>
-          {book.author}
-        </ThemedText>
-        <ThemedText variant="caption" opacity={0.8}>
-          {book.borrowDate
-            ? `Borrowed: ${book.borrowDate}`
-            : `Added by: ${book.added_by ?? CURRENT_USER}`
-          }
-        </ThemedText>
-
-        <TouchableOpacity
-          style={[cardStyles.actionButton, { backgroundColor: buttonColor }]}
-          onPress={onAction}
-        >
-          {buttonLabel === 'Return' && (
-            <Ionicons name="refresh" size={20} color={colors.white} />
-          )}
-          {buttonLabel === 'Delete' && (
-            <Ionicons name="trash-outline" size={20} color={colors.white} />
-          )}
-          <ThemedText variant="caption" color="white" style={{ fontSize: 14 }}>
-            {buttonLabel}
+      <View style={cardStyles.row}>
+        <BookCover imageUrl={book.coverUrl} width={70} height={100} radius={8} />
+        <View style={cardStyles.info}>
+          <ThemedText variant="bookTitle" numberOfLines={1}>
+            {book.title}
           </ThemedText>
-        </TouchableOpacity>
+          <ThemedText variant="author" opacity={0.8}>
+            {book.author}
+          </ThemedText>
+          <ThemedText variant="caption" opacity={0.8}>
+            {book.borrowDate
+              ? `Borrowed: ${book.borrowDate}`
+              : `Added by: ${book.added_by ?? CURRENT_USER}`
+            }
+          </ThemedText>
+
+        </View>
       </View>
+
+      {children}
+
+      <TouchableOpacity
+        style={[cardStyles.actionButton, { backgroundColor: buttonColor }]}
+        onPress={onAction}
+      >
+        {buttonLabel === 'Return' && (
+          <Ionicons name="refresh" size={20} color={colors.white} />
+        )}
+        {buttonLabel === 'Delete' && (
+          <Ionicons name="trash-outline" size={20} color={colors.white} />
+        )}
+        <ThemedText variant="caption" color="white" style={{ fontSize: 14 }}>
+          {buttonLabel}
+        </ThemedText>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const cardStyles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     backgroundColor: colors.surface,
     borderRadius: 10,
-    padding: 12,
-    gap: 12,
+    padding: 10,
+    gap: 10,
     marginBottom: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
   },
   info: {
     flex: 1,
@@ -117,19 +129,24 @@ export default function ProfileScreen() {
     setLoading(true);
     try {
       const borrows = await getUserBorrows(CURRENT_USER);
+      console.log('[profile] raw borrows:', borrows.length, borrows.map((b: any) => ({ id: b.id, returnDate: b.returnDate, borrowDate: b.borrowDate })));
       const mappedBorrows: Book[] = borrows
-        .filter((b: any) => !b.returnDate) 
+        .filter((b: any) => !b.returnDate)
         .map((borrow: any) => ({
-          id:          borrow.book?.documentId ?? borrow.id.toString(),
-          title:       borrow.book?.title      ?? '',
-          author:      borrow.book?.author     ?? '',
-          coverUrl:    borrow.book?.coverUrl   ?? '',
-          state:      'borrowed' as const,
-          pages:       borrow.book?.pages      ?? 0,
-          rating:      borrow.book?.rating     ?? 0,
-          description: borrow.book?.description ?? '',
-          borrowDate:  borrow.borrowDate,
-          borrowId:    borrow.documentId ?? borrow.id.toString(),
+          id:                 borrow.book?.documentId  ?? borrow.id.toString(),
+          title:              borrow.book?.title       ?? '',
+          author:             borrow.book?.author      ?? '',
+          coverUrl:           borrow.book?.coverUrl    ?? '',
+          state:              'borrowed' as const,
+          pages:              borrow.book?.pages       ?? 0,
+          rating:             borrow.book?.rating      ?? 0,
+          description:        borrow.book?.description ?? '',
+          borrowDate:         borrow.borrowDate,
+          borrowId:           borrow.documentId        ?? borrow.id.toString(),
+          daysElapsed:        borrow.daysElapsed        ?? 0,
+          daysRemaining:      borrow.daysRemaining      ?? 30,
+          isOverdue:          borrow.isOverdue          ?? false,
+          progressPercentage: borrow.progressPercentage ?? 0,
         }));
       setBorrowedBooks(mappedBorrows);
 
@@ -217,7 +234,7 @@ export default function ProfileScreen() {
       {borrowedBooks.length > 0 ? (
         borrowedBooks.map(book => (
           <BookActionCard
-            key={book.id}
+            key={book.borrowId ?? book.id}
             book={book}
             buttonLabel="Return"
             onAction={() => router.push({
@@ -227,7 +244,14 @@ export default function ProfileScreen() {
                 borrowId: book.borrowId ?? '',
               }
             })}
-          />
+          >
+            <BorrowTimerCard
+              daysElapsed={book.daysElapsed ?? 0}
+              daysRemaining={book.daysRemaining ?? 30}
+              isOverdue={book.isOverdue ?? false}
+              progressPercentage={book.progressPercentage ?? 0}
+            />
+          </BookActionCard>
         ))
       ) : (
         <ThemedText variant="body" opacity={0.5} style={styles.emptyText}>
