@@ -4,12 +4,16 @@ import { colors } from "../constants/Colors";
 import AvailabilityBadge from "./AvailabilityBadge";
 import BookCover from "./BookCover";
 import ThemedText from "./ThemedText";
+import { getBookCoverUrl } from "@/services/pocketbase";
 
 export interface Book {
   id: string;
   title: string;
   author: string;
   coverUrl: string;
+  cover?: string | string[];
+  collectionId?: string;
+  collectionName?: string;
   state: "available" | "borrowed";
   pages: number;
   rating: number;
@@ -35,7 +39,7 @@ export default function BookGridCard({ book, onPress }: BookGridCardProps) {
       onPress={onPress}
       activeOpacity={0.9}
     >
-      <BookCover imageUrl={book.coverUrl} width={165} height={220} />
+      <BookCover imageUrl={getBookCoverUrl(book)} width={165} height={220} />
       <View style={styles.info}>
         <ThemedText variant="bookTitle" numberOfLines={1}>
           {book.title}

@@ -17,11 +17,12 @@ import BookCover from '@/components/BookCover';
 import BorrowTimerCard from '@/components/BorrowTimerCard';
 import { colors } from '@/constants/Colors';
 import {
-  BASE_URL,
+  getBookCoverUrl,
   getUserBorrows,
   getBooksByUser,
   deleteBook,
-} from '@/services/api';
+  isBookCurrentlyBorrowed,
+} from '@/services/pocketbase';
 import { Book } from '@/components/BookGridCard';
 import { mockUser } from '@/data/mockBooks';
 import SuccessModal from '@/components/SuccessModal';
@@ -46,7 +47,7 @@ function BookActionCard({
   return (
     <View style={cardStyles.container}>
       <View style={cardStyles.row}>
-        <BookCover imageUrl={book.coverUrl} width={70} height={100} radius={8} />
+        <BookCover imageUrl={getBookCoverUrl(book)} width={70} height={100} radius={8} />
         <View style={cardStyles.info}>
           <ThemedText variant="bookTitle" numberOfLines={1}>
             {book.title}
@@ -137,6 +138,9 @@ export default function ProfileScreen() {
           title:              borrow.book?.title       ?? '',
           author:             borrow.book?.author      ?? '',
           coverUrl:           borrow.book?.coverUrl    ?? '',
+          cover:              borrow.book?.cover,
+          collectionId:        borrow.book?.collectionId,
+          collectionName:      borrow.book?.collectionName,
           state:              'borrowed' as const,
           pages:              borrow.book?.pages       ?? 0,
           rating:             borrow.book?.rating      ?? 0,
@@ -156,6 +160,9 @@ export default function ProfileScreen() {
         title:       item.title      ?? '',
         author:      item.author     ?? '',
         coverUrl:    item.coverUrl   ?? '',
+        cover:       item.cover,
+        collectionId: item.collectionId,
+        collectionName: item.collectionName,
         state:       item.state     ?? 'available',
         pages:       item.pages      ?? 0,
         rating:      item.rating     ?? 0,
@@ -191,6 +198,11 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              const isBorrowed = await isBookCurrentlyBorrowed(book.id);
+              if (isBorrowed) {
+                Alert.alert('Cannot Delete', 'This book is currently borrowed.');
+                return;
+              }
               await deleteBook(book.id);
               setMyBooks(prev => prev.filter(b => b.id !== book.id));
               setDeletedTitle(book.title);

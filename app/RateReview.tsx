@@ -17,7 +17,7 @@ import ThemedText from '@/components/ThemedText';
 import BookCover from '@/components/BookCover';
 import BackButton from '@/components/BackButton';
 import PrimaryButton from '@/components/PrimaryButton';
-import { getBook, returnBook, updateBookStatus } from '@/services/api';
+import { getBook, getBookCoverUrl, returnBook, updateBookStatus } from '@/services/pocketbase';
 import { Book } from '@/components/BookGridCard';
 import { colors } from '@/constants/Colors';
 
@@ -70,6 +70,9 @@ function mapBook(item: any): Book {
     title:       item.title       ?? '',
     author:      item.author      ?? '',
     coverUrl:    item.coverUrl    ?? '',
+    cover:       item.cover,
+    collectionId: item.collectionId,
+    collectionName: item.collectionName,
     state:      item.status      ?? 'available',
     pages:       item.pages       ?? 0,
     rating:      item.rating      ?? 0,
@@ -174,7 +177,7 @@ export default function RateReviewScreen() {
           <BackButton onPress={() => router.back()} />
 
           <View style={styles.bookInfo}>
-            <BookCover imageUrl={book.coverUrl} width={160} height={220} />
+            <BookCover imageUrl={getBookCoverUrl(book)} width={160} height={220} />
             <ThemedText variant="h3" center style={styles.bookTitle}>
               {book.title}
             </ThemedText>

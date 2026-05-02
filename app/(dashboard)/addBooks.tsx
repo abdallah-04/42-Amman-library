@@ -20,7 +20,7 @@ import ThemedText from '@/components/ThemedText';
 import PrimaryButton from '@/components/PrimaryButton';
 import { colors } from '@/constants/Colors';
 import SuccessModal from '@/components/SuccessModal';
-import { uploadImage, addBook } from '@/services/api';
+import { addBook } from '@/services/pocketbase';
 
 interface OpenLibraryBook {
   key: string;
@@ -343,18 +343,13 @@ function ManualMode() {
     }
     try {
         setUploading(true);
-        let coverUrl = '';
-        if (coverImage) {
-          coverUrl = await uploadImage(coverImage);
-        }
       await addBook({
         title:       title.trim(),
         author:      author.trim(),
         description: description.trim(),
         state:      'available',
-        coverUrl:    coverUrl || '',
         added_by:    'amufleh',
-      });
+      }, coverImage);
 
       setAddedTitle(title.trim());
       setShowSuccess(true);

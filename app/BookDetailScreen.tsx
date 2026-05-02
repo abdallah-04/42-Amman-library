@@ -12,8 +12,9 @@ import {
   getBook,
   borrowBook,
   updateBookStatus,
-  getBookReviews,                                         
-} from "@/services/api";
+  getBookCoverUrl,
+  getBookReviews,
+} from "@/services/pocketbase";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -40,6 +41,9 @@ function mapStringBook(item: any): Book {
     title:       item.title       ?? '',
     author:      item.author      ?? '',
     coverUrl:    item.coverUrl    ?? '',
+    cover:       item.cover,
+    collectionId: item.collectionId,
+    collectionName: item.collectionName,
     state:       item.state       ?? 'available',
     pages:       item.pages       ?? 0,
     rating:      item.rating      ?? 0,
@@ -152,7 +156,7 @@ export default function BooksDetailScreen() {
 
 
         <View style={styles.coverContainer}>
-          <BookCover imageUrl={book.coverUrl} width={209} height={294} />
+          <BookCover imageUrl={getBookCoverUrl(book)} width={209} height={294} />
         </View>
 
   

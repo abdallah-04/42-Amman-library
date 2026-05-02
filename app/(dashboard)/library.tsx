@@ -6,7 +6,7 @@ import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import SearchBar from '@/components/SearchBar';
 import BookGridCard, { Book } from '@/components/BookGridCard';
-import { getAllBooks, searchBooks } from '@/services/api';
+import { getAllBooks, searchBooks } from '@/services/pocketbase';
 import { colors } from '@/constants/Colors';
 
 function mapStringBook(item: any): Book {
@@ -15,6 +15,9 @@ function mapStringBook(item: any): Book {
     title: item.title ?? '',
     author: item.author ?? '',
     coverUrl: item.coverUrl ?? '',
+    cover: item.cover,
+    collectionId: item.collectionId,
+    collectionName: item.collectionName,
     state: item.state ?? 'available',
     pages: item.pages ?? 0,
     rating: item.rating ?? 0,
