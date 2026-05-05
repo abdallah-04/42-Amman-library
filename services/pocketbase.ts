@@ -2,15 +2,15 @@ import PocketBase from 'pocketbase';
 import { Platform } from 'react-native';
 
 const DEFAULT_PB_URL = Platform.select({
-  android: 'http://192.168.1.15:8090',
-  ios: 'http://localhost:8090',
-  web: 'http://localhost:8090',
-  default: 'http://localhost:8090',
-}) ?? 'http://localhost:8090';
+  android: `http://${process.env.MY_COMPUTER_IP}:8090`,
+  ios: `http://${process.env.MY_COMPUTER_IP}:8090`,    
+  web: 'http://localhost:8090',           
+  default: `http://${process.env.MY_COMPUTER_IP}:8090`,
+}) ?? `http://${process.env.MY_COMPUTER_IP}:8090`;
 
 export const PB_URL = process.env.EXPO_PUBLIC_BASE_URL ?? DEFAULT_PB_URL;
 
-export const pb = new PocketBase(PB_URL);
+export const pb = new PocketBase(DEFAULT_PB_URL);
 
 const BORROW_PERIOD_DAYS = 30;
 const DEFAULT_PROGRESS = {
