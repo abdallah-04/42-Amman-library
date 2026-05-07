@@ -6,7 +6,7 @@ import ThemedView from '@/components/ThemedView';
 import ThemedText from '@/components/ThemedText';
 import SearchBar from '@/components/SearchBar';
 import BookGridCard, { Book } from '@/components/BookGridCard';
-import { getAllBooks, searchBooks } from '@/services/pocketbase';
+import { getAllBooks, pb, PB_URL, searchBooks } from '@/services/pocketbase';
 import { colors } from '@/constants/Colors';
 
 function mapStringBook(item: any): Book {
@@ -56,18 +56,34 @@ export default function LibraryScreen() {
     return () => clearTimeout(delay);
   }, [search]);
 
-  async function loadBooks() {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await getAllBooks();
-      setBooks(data.map(mapStringBook));
-    } catch {
-      setError('Failed to load books. Check your connection.');
-    } finally {
-      setLoading(false);
-    }
+async function loadBooks() {
+  setLoading(true);
+  setError('');
+  
+  // Debug logging
+  console.log('=== DEBUG INFO ===');
+  console.log('PocketBase URL:', PB_URL);
+  console.log('Attempting to connect...');
+  
+  try {
+    const health = await pb.health.check();
+    console.log('✅ Health check passed:', health);
+    
+    const data = await getAllBooks();
+    console.log('✅ Books loaded:', data.length);
+    setBooks(data.map(mapStringBook));
+  } catch (err: any) {
+    console.log('❌ Error details:', {
+      message: err.message,
+      status: err.status,
+      data: err.data,
+      isAbort: err.isAbort,
+    });
+    setError(`Failed to load books. ${err.message || 'Check your connection.'}`);
+  } finally {
+    setLoading(false);
   }
+}
 
   async function handleSearch(query: string) {
     setLoading(true);
