@@ -320,12 +320,11 @@ export async function getUserBorrows(intraLogin: string) {
   try {
     const records = await pb.collection("borrow").getFullList({
       filter: `intraLogin = "${intraLogin}"`,
-      expand: "book",           // ← this should work, but let's verify
+      expand: "book",          
       sort: "-created",
       requestKey: null,
     });
 
-    // Add this log to see the raw PocketBase response
     console.log("[getUserBorrows] first record:", JSON.stringify(records[0], null, 2));
 
     return records.map(normalizeBorrow);

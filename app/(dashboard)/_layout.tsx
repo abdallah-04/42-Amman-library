@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { View, Pressable, StyleSheet, Dimensions } from 'react-native';
 import { Tabs } from 'expo-router';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import Animated, {
   useSharedValue,
   useAnimatedProps,
@@ -10,21 +10,19 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/constants/Colors'; // Make sure this path matches your project structure
+import { colors } from '@/constants/Colors';
 
 const { width } = Dimensions.get('window');
 const HEIGHT = 60; 
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
-// Mapped your specific tab names to their active/inactive icons
 const ICONS = {
   library: { active: 'book', inactive: 'book-outline' },
   profile: { active: 'person', inactive: 'person-outline' },
   addBooks: { active: 'add-circle', inactive: 'add-circle-outline' },
 } as const;
 
-// Worklet for calculating the curved path
 function generatePath(centerX: number) {
   'worklet';
   const curveWidth = 50;  
@@ -48,7 +46,7 @@ function generatePath(centerX: number) {
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const activeIndex = useSharedValue(state.index);
-  const TAB_WIDTH = width / state.routes.length; // Dynamically calculates based on your 3 tabs
+  const TAB_WIDTH = width / state.routes.length; 
 
   useEffect(() => {
     activeIndex.value = withSpring(state.index, {
@@ -128,8 +126,10 @@ export default function DashLayout() {
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
-    >
+      screenOptions={{ headerShown: false,
+      tabBarStyle: { backgroundColor: 'transparent' },
+       }}
+       >
       <Tabs.Screen 
         name="library" 
         options={{ title: 'Library' }} 
@@ -149,11 +149,12 @@ export default function DashLayout() {
 const styles = StyleSheet.create({
   wrapper: {
     height: HEIGHT,
-    backgroundColor: colors.background, // Fills behind the curve with the main app background
+    backgroundColor: colors.background,
+    overflow: 'visible'
   },
   row: {
     flexDirection: 'row',
-    height: HEIGHT,
+    height: HEIGHT - 5,
   },
   tab: {
     justifyContent: 'center',
