@@ -1,8 +1,8 @@
-import { View } from 'react-native'
+import { View, type DimensionValue } from 'react-native'
 
 interface SpacerProps {
-  width?: number | string
-  height?: number
+  width?: DimensionValue
+  height?: DimensionValue
 }
 
 export default function Spacer({

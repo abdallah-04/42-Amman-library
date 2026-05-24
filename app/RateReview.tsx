@@ -145,23 +145,23 @@ export default function RateReviewScreen() {
     submitReturn(rating, feedback);
   }
 
-  async function submitReturn(stars: number, comment: string) {
-    try {
-      if (borrowId) {
-        await returnBook(borrowId, stars, comment);
-      }
-
-      await updateBookStatus(book!.id, 'available');
-
-      Alert.alert(
-        'Book Returned!',
-        `Thank you for returning "${book!.title}"`,
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    } catch {
-      Alert.alert('Error', 'Failed to return book. Try again.');
+ async function submitReturn(stars: number, comment: string) {
+  try {
+    if (borrowId) {
+      await returnBook(borrowId, book!.id, stars, comment);
     }
+
+    await updateBookStatus(book!.id, 'available');
+
+    Alert.alert(
+      'Book Returned!',
+      `Thank you for returning "${book!.title}"`,
+      [{ text: 'OK', onPress: () => router.back() }]
+    );
+  } catch {
+    Alert.alert('Error', 'Failed to return book. Try again.');
   }
+}
 
   return (
     <ThemedView showAmman={false}>

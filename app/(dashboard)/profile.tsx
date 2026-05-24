@@ -145,7 +145,7 @@ export default function ProfileScreen() {
           pages:              borrow.book?.pages       ?? 0,
           rating:             borrow.book?.rating      ?? 0,
           description:        borrow.book?.description ?? '',
-          borrowDate:         borrow.borrowDate,
+          borrowDate:         borrow.borrowDate?.split('T')[0].split(' ')[0],
           borrowId:           borrow.documentId        ?? borrow.id.toString(),
           daysElapsed:        borrow.daysElapsed        ?? 0,
           daysRemaining:      borrow.daysRemaining      ?? 30,

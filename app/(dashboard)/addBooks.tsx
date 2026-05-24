@@ -165,11 +165,11 @@ async function handleSelectBook(book: OpenLibraryBook) {
               pages: book.number_of_pages_median ?? 0,
               description,
               state: 'available',
-              rating: 2,
+              rating: null,
               coverUrl: book.cover_i
                 ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
                 : '',
-              added_by: 'amufleh',
+              added_by: null,
             });
             setAddedTitle(book.title);
             setShowSuccess(true);
