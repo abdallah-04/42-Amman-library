@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, Pressable, StyleSheet, useWindowDimensions } from 'react-native'; // ← useWindowDimensions
 import { Tabs } from 'expo-router';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Svg, { Path, Rect } from 'react-native-svg';
@@ -10,10 +10,10 @@ import Animated, {
   useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // ← add this
 import { colors } from '@/constants/Colors';
 
-const { width } = Dimensions.get('window');
-const HEIGHT = 60; 
+const HEIGHT = 60;
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -23,10 +23,11 @@ const ICONS = {
   addBooks: { active: 'add-circle', inactive: 'add-circle-outline' },
 } as const;
 
-function generatePath(centerX: number) {
+// ← width is now a parameter instead of a module-level constant
+function generatePath(centerX: number, w: number) {
   'worklet';
-  const curveWidth = 50;  
-  const curveDepth = 18;  
+  const curveWidth = 50;
+  const curveDepth = 18;
 
   return `
     M0 0
@@ -37,7 +38,7 @@ function generatePath(centerX: number) {
     C${centerX + 25} ${curveDepth},
      ${centerX + 25} 0,
      ${centerX + curveWidth} 0
-    H${width}
+    H${w}
     V${HEIGHT}
     H0
     Z
@@ -45,8 +46,11 @@ function generatePath(centerX: number) {
 }
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { width } = useWindowDimensions(); // ← reactive to orientation
+  const insets = useSafeAreaInsets();       // ← home indicator / gesture bar
+
+  const TAB_WIDTH = width / state.routes.length;
   const activeIndex = useSharedValue(state.index);
-  const TAB_WIDTH = width / state.routes.length; 
 
   useEffect(() => {
     activeIndex.value = withSpring(state.index, {
@@ -60,7 +64,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const animatedProps = useAnimatedProps(() => {
     const centerX = TAB_WIDTH * activeIndex.value + TAB_WIDTH / 2;
     return {
-      d: generatePath(centerX),
+      d: generatePath(centerX, width), // ← pass reactive width
     };
   });
 
@@ -72,19 +76,19 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     ],
   }));
 
+  const svgHeight = HEIGHT + insets.bottom + 20; // ← covers inset space
+
   return (
-    <View style={styles.wrapper}>
-      {/* Tab bar background using your surface color */}
-      <Svg width={width} height={HEIGHT + 20} style={StyleSheet.absoluteFill}>
+    <View style={[styles.wrapper, { height: HEIGHT + insets.bottom, paddingBottom: insets.bottom }]}>
+      <Svg width={width} height={svgHeight} style={StyleSheet.absoluteFill}>
         <AnimatedPath
           animatedProps={animatedProps}
-          fill={colors.surface} 
+          fill={colors.surface}
         />
       </Svg>
 
       <View style={styles.row}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
           const focused = state.index === index;
           const icon = ICONS[route.name as keyof typeof ICONS] || ICONS.library;
 
@@ -94,7 +98,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               target: route.key,
               canPreventDefault: true,
             });
-
             if (!focused && !event.defaultPrevented) {
               navigation.navigate(route.name, route.params);
             }
@@ -116,7 +119,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         })}
       </View>
 
-      {/* Animated Circle highlighting the active tab */}
       <Animated.View style={[styles.circle, circleStyle]} />
     </View>
   );
@@ -126,31 +128,23 @@ export default function DashLayout() {
   return (
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{ headerShown: false,
-      tabBarStyle: { backgroundColor: 'transparent' },
-       }}
-       >
-      <Tabs.Screen 
-        name="library" 
-        options={{ title: 'Library' }} 
-      />
-      <Tabs.Screen 
-        name="profile" 
-        options={{ title: 'Profile' }} 
-      />
-      <Tabs.Screen 
-        name="addBooks" 
-        options={{ title: 'Add Book' }} 
-      />
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { backgroundColor: 'transparent' },
+      }}
+    >
+      <Tabs.Screen name="library" options={{ title: 'Library' }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="addBooks" options={{ title: 'Add Book' }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    height: HEIGHT,
+    // height and paddingBottom set inline above (dynamic)
     backgroundColor: colors.background,
-    overflow: 'visible'
+    overflow: 'visible',
   },
   row: {
     flexDirection: 'row',
@@ -167,9 +161,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primary, // Using your primary orange-red 
-
-    // Adjust shadow using the primaryLight color for a nice glow effect
+    backgroundColor: colors.primary,
     shadowColor: colors.primaryLight,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
