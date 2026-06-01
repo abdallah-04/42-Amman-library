@@ -149,37 +149,27 @@ async function fetchDescription(workKey: string): Promise<string> {
 }
 
 async function handleSelectBook(book: OpenLibraryBook) {
-  Alert.alert(
-    'Add Book',
-    `Add "${book.title}" to the library?`,
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Add',
-        onPress: async () => {
-          try {
-            const description = await fetchDescription(book.key);
-            await addBook({
-              title: book.title,
-              author: book.author_name?.[0] ?? 'Unknown',
-              pages: book.number_of_pages_median ?? 0,
-              description,
-              state: 'available',
-              rating: null,
-              coverUrl: book.cover_i
-                ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
-                : '',
-              added_by: null,
-            });
-            setAddedTitle(book.title);
-            setShowSuccess(true);
-          } catch (err) {
-            Alert.alert('Error', 'Failed to add book');
-          }
-        },
-      },
-    ]
-  );
+  try {
+    const description = await fetchDescription(book.key);
+
+    await addBook({
+      title: book.title,
+      author: book.author_name?.[0] ?? 'Unknown',
+      pages: book.number_of_pages_median ?? 0,
+      description,
+      state: 'available',
+      rating: null,
+      coverUrl: book.cover_i
+        ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
+        : '',
+      added_by: null,
+    });
+
+    setAddedTitle(book.title);
+    setShowSuccess(true);
+  } catch (err) {
+    Alert.alert('Error', 'Failed to add book');
+  }
 }
 
   return (
@@ -309,14 +299,25 @@ function ManualMode() {
   const [uploading, setUploading] = useState(false);
 
   async function pickImage() {
-    const { status } =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    // Web: use native <input type="file"> — expo-image-picker doesn't work on web
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        setCoverImage(url);
+      };
+      input.click();
+      return;
+    }
 
+    // Native (iOS / Android): use expo-image-picker
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission needed',
-        'Please allow access to your photo library.'
-      );
+      Alert.alert('Permission needed', 'Please allow access to your photo library.');
       return;
     }
 
@@ -342,22 +343,33 @@ function ManualMode() {
       return;
     }
     try {
-        setUploading(true);
+      setUploading(true);
+
+      // On web, coverImage is a blob: URL — convert it to a File object
+      // so PocketBase's JS SDK can attach it to FormData correctly.
+      // On native, pass the URI string as-is (handled by createCoverFile in pocketbase.ts).
+      let imageToUpload: string | File | null = coverImage;
+      if (Platform.OS === 'web' && coverImage?.startsWith('blob:')) {
+        const blob = await fetch(coverImage).then(r => r.blob());
+        imageToUpload = new File([blob], 'cover.jpg', { type: blob.type || 'image/jpeg' });
+      }
+
       await addBook({
         title:       title.trim(),
         author:      author.trim(),
         description: description.trim(),
-        state:      'available',
+        state:       'available',
         added_by:    'amufleh',
-      }, coverImage);
+      }, imageToUpload as any);
 
       setAddedTitle(title.trim());
       setShowSuccess(true);
-    } 
-    catch {
+    } catch {
       Alert.alert('Error', 'Failed to add book. Try again.');
+    } finally {
+      setUploading(false);
     }
-}
+  }
 
   return (
     <View style={manualStyles.wrapper}>

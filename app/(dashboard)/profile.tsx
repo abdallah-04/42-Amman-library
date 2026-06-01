@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -58,10 +57,8 @@ function BookActionCard({
           <ThemedText variant="caption" opacity={0.8}>
             {book.borrowDate
               ? `Borrowed: ${book.borrowDate}`
-              : `Added by: ${book.added_by ?? CURRENT_USER}`
-            }
+              : `Added by: ${book.added_by ?? CURRENT_USER}`}
           </ThemedText>
-
         </View>
       </View>
 
@@ -77,6 +74,7 @@ function BookActionCard({
         {buttonLabel === 'Delete' && (
           <Ionicons name="trash-outline" size={20} color={colors.white} />
         )}
+
         <ThemedText variant="caption" color="white" style={{ fontSize: 14 }}>
           {buttonLabel}
         </ThemedText>
@@ -115,10 +113,15 @@ const cardStyles = StyleSheet.create({
 
 export default function ProfileScreen() {
   const [borrowedBooks, setBorrowedBooks] = useState<Book[]>([]);
-  const [myBooks, setMyBooks]             = useState<Book[]>([]);
-  const [loading, setLoading]             = useState(true);
-  const [showSuccess, setShowSuccess]     = useState(false);
-  const [deletedTitle, setDeletedTitle]   = useState('');
+  const [myBooks, setMyBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [deletedTitle, setDeletedTitle] = useState('');
+
+  // ✅ NEW DELETE MODAL STATE
+  const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -130,47 +133,49 @@ export default function ProfileScreen() {
     setLoading(true);
     try {
       const borrows = await getUserBorrows(CURRENT_USER);
-      console.log('[profile] raw borrows:', borrows.length, borrows.map((b: any) => ({ id: b.id, returnDate: b.returnDate, borrowDate: b.borrowDate })));
+
       const mappedBorrows: Book[] = borrows
         .filter((b: any) => !b.returnDate)
         .map((borrow: any) => ({
-          id:                 borrow.book?.documentId  ?? borrow.id.toString(),
-          title:              borrow.book?.title       ?? '',
-          author:             borrow.book?.author      ?? '',
-          coverUrl:           borrow.book?.coverUrl    ?? '',
-          cover:              borrow.book?.cover,
-          collectionId:        borrow.book?.collectionId,
-          collectionName:      borrow.book?.collectionName,
-          state:              'borrowed' as const,
-          pages:              borrow.book?.pages       ?? 0,
-          rating:             borrow.book?.rating      ?? 0,
-          description:        borrow.book?.description ?? '',
-          borrowDate:         borrow.borrowDate?.split('T')[0].split(' ')[0],
-          borrowId:           borrow.documentId        ?? borrow.id.toString(),
-          daysElapsed:        borrow.daysElapsed        ?? 0,
-          daysRemaining:      borrow.daysRemaining      ?? 30,
-          isOverdue:          borrow.isOverdue          ?? false,
+          id: borrow.book?.documentId ?? borrow.id.toString(),
+          title: borrow.book?.title ?? '',
+          author: borrow.book?.author ?? '',
+          coverUrl: borrow.book?.coverUrl ?? '',
+          cover: borrow.book?.cover,
+          collectionId: borrow.book?.collectionId,
+          collectionName: borrow.book?.collectionName,
+          state: 'borrowed' as const,
+          pages: borrow.book?.pages ?? 0,
+          rating: borrow.book?.rating ?? 0,
+          description: borrow.book?.description ?? '',
+          borrowDate: borrow.borrowDate?.split('T')[0],
+          borrowId: borrow.documentId ?? borrow.id.toString(),
+          daysElapsed: borrow.daysElapsed ?? 0,
+          daysRemaining: borrow.daysRemaining ?? 30,
+          isOverdue: borrow.isOverdue ?? false,
           progressPercentage: borrow.progressPercentage ?? 0,
         }));
+
       setBorrowedBooks(mappedBorrows);
 
       const addedBooks = await getBooksByUser(CURRENT_USER);
+
       const mappedAdded: Book[] = addedBooks.map((item: any) => ({
-        id:          item.documentId ?? item.id.toString(),
-        title:       item.title      ?? '',
-        author:      item.author     ?? '',
-        coverUrl:    item.coverUrl   ?? '',
-        cover:       item.cover,
+        id: item.documentId ?? item.id.toString(),
+        title: item.title ?? '',
+        author: item.author ?? '',
+        coverUrl: item.coverUrl ?? '',
+        cover: item.cover,
         collectionId: item.collectionId,
         collectionName: item.collectionName,
-        state:       item.state     ?? 'available',
-        pages:       item.pages      ?? 0,
-        rating:      item.rating     ?? 0,
+        state: item.state ?? 'available',
+        pages: item.pages ?? 0,
+        rating: item.rating ?? 0,
         description: item.description ?? '',
-        added_by:    item.added_by   ?? CURRENT_USER,
+        added_by: item.added_by ?? CURRENT_USER,
       }));
-      setMyBooks(mappedAdded);
 
+      setMyBooks(mappedAdded);
     } catch (err) {
       console.log('Failed to load profile data:', err);
     } finally {
@@ -178,43 +183,50 @@ export default function ProfileScreen() {
     }
   }
 
-  async function handleDelete(book: Book) {
-    
+  // ✅ CLEAN DELETE HANDLER (NO POPUPS)
+  function handleDelete(book: Book) {
     if (book.state === 'borrowed') {
-    Alert.alert(
-      'Cannot Delete',
-      `"${book.title}" is currently borrowed by someone. Wait until it is returned before deleting.`,
-      [{ text: 'OK' }]
-    );
-    return;
+      setDeletedTitle(`"${book.title}" is currently borrowed and cannot be deleted.`);
+      setShowSuccess(true);
+      return;
+    }
+
+    setBookToDelete(book);
+    setShowDeleteConfirm(true);
   }
-    Alert.alert(
-      'Delete Book',
-      `Are you sure you want to delete "${book.title}" from the library?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const isBorrowed = await isBookCurrentlyBorrowed(book.id);
-              if (isBorrowed) {
-                Alert.alert('Cannot Delete', 'This book is currently borrowed.');
-                return;
-              }
-              await deleteBook(book.id);
-              setMyBooks(prev => prev.filter(b => b.id !== book.id));
-              setDeletedTitle(book.title);
-              setShowSuccess(true);
-            } catch {
-              Alert.alert('Error', 'Failed to delete book. Try again.');
-            }
-          },
-        },
-      ]
-    );
-  }
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setBookToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!bookToDelete) return;
+
+    try {
+      const isBorrowed = await isBookCurrentlyBorrowed(bookToDelete.id);
+
+      if (isBorrowed) {
+        setDeletedTitle('This book is currently borrowed.');
+        setShowSuccess(true);
+        return;
+      }
+
+      await deleteBook(bookToDelete.id);
+
+      setMyBooks(prev => prev.filter(b => b.id !== bookToDelete.id));
+
+      setDeletedTitle(bookToDelete.title);
+      setShowSuccess(true);
+    } catch (error) {
+      console.log('Failed to delete book:', error);
+      setDeletedTitle('Failed to delete book. Try again.');
+      setShowSuccess(true);
+    } finally {
+      setShowDeleteConfirm(false);
+      setBookToDelete(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -228,10 +240,7 @@ export default function ProfileScreen() {
     <View>
       <View style={styles.avatarSection}>
         <View style={styles.avatarRing}>
-          <Image
-            source={{ uri: mockUser.avatarUrl }}
-            style={styles.avatarImage}
-          />
+          <Image source={{ uri: mockUser.avatarUrl }} style={styles.avatarImage} />
         </View>
       </View>
 
@@ -243,33 +252,29 @@ export default function ProfileScreen() {
         Currently Borrowing
       </ThemedText>
 
-      {borrowedBooks.length > 0 ? (
-        borrowedBooks.map(book => (
-          <BookActionCard
-            key={book.borrowId ?? book.id}
-            book={book}
-            buttonLabel="Return"
-            onAction={() => router.push({
+      {borrowedBooks.map(book => (
+        <BookActionCard
+          key={book.borrowId ?? book.id}
+          book={book}
+          buttonLabel="Return"
+          onAction={() =>
+            router.push({
               pathname: '/RateReview',
               params: {
-                id:       book.id,
+                id: book.id,
                 borrowId: book.borrowId ?? '',
-              }
-            })}
-          >
-            <BorrowTimerCard
-              daysElapsed={book.daysElapsed ?? 0}
-              daysRemaining={book.daysRemaining ?? 30}
-              isOverdue={book.isOverdue ?? false}
-              progressPercentage={book.progressPercentage ?? 0}
-            />
-          </BookActionCard>
-        ))
-      ) : (
-        <ThemedText variant="body" opacity={0.5} style={styles.emptyText}>
-          No books currently borrowed
-        </ThemedText>
-      )}
+              },
+            })
+          }
+        >
+          <BorrowTimerCard
+            daysElapsed={book.daysElapsed ?? 0}
+            daysRemaining={book.daysRemaining ?? 30}
+            isOverdue={book.isOverdue ?? false}
+            progressPercentage={book.progressPercentage ?? 0}
+          />
+        </BookActionCard>
+      ))}
 
       <ThemedText variant="h3" style={styles.sectionLabel}>
         Books I Added
@@ -281,7 +286,7 @@ export default function ProfileScreen() {
     <ThemedView showAmman={true}>
       <FlatList
         data={myBooks}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         ListHeaderComponent={ListHeader}
         renderItem={({ item }) => (
           <BookActionCard
@@ -291,19 +296,40 @@ export default function ProfileScreen() {
             onAction={() => handleDelete(item)}
           />
         )}
-        ListEmptyComponent={
-          <ThemedText variant="body" opacity={0.5} style={styles.emptyText}>
-            You haven't added any books yet
-          </ThemedText>
-        }
         ListFooterComponent={<View style={{ height: 100 }} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
       />
+
+      {/* ✅ DELETE CONFIRM MODAL */}
+      {showDeleteConfirm && bookToDelete && (
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.box}>
+            <ThemedText variant="h3" style={{ marginBottom: 10 }}>
+              Delete Book
+            </ThemedText>
+
+            <ThemedText style={{ marginBottom: 16 }}>
+              Are you sure you want to delete "{bookToDelete.title}"?
+            </ThemedText>
+
+            <View style={modalStyles.row}>
+              <TouchableOpacity onPress={cancelDelete} style={modalStyles.cancelBtn}>
+                <ThemedText>Cancel</ThemedText>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={confirmDelete} style={modalStyles.deleteBtn}>
+                <ThemedText color="white">Delete</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+
       <SuccessModal
         visible={showSuccess}
-        title="Deleted"
-        message={`"${deletedTitle}" has been removed.`}
+        title="Notice"
+        message={deletedTitle}
         buttonLabel="OK"
         onClose={() => setShowSuccess(false)}
       />
@@ -340,8 +366,37 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
   },
-  emptyText: {
-    textAlign: 'center',
-    marginBottom: 16,
+});
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  box: {
+    width: 300,
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 12,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  cancelBtn: {
+    padding: 10,
+  },
+  deleteBtn: {
+    padding: 10,
+    backgroundColor: colors.red,
+    borderRadius: 8,
   },
 });

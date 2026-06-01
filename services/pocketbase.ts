@@ -7,11 +7,11 @@ import { Platform } from "react-native";
 
 const DEFAULT_PB_URL =
   Platform.select({
-    android: "http://192.168.1.15:8090",
-    ios: "http://192.168.1.15:8090",
-    web: "http://192.168.1.15:8090",
-    default: "http://192.168.1.15:8090",
-  }) ?? "http://192.168.1.15:8090";
+    android: `http://192.168.1.15:8090`,
+    ios: `http://192.168.1.15:8090`,
+    web: "http://localhost:8090",
+    default: `http://192.168.1.15:8090`,
+  }) ?? `http://192.168.1.15:8090`;
 
 function normalizePocketBaseUrl(url?: string) {
   const trimmed = url?.trim();
@@ -205,12 +205,17 @@ export async function searchBooks(query: string) {
 }
 
 /**
- * Adds a new book. Pass imageUri as the second argument to upload a cover photo.
- * Never set Content-Type manually — React Native fetch handles the boundary automatically.
+ * Adds a new book. Pass a cover image as the second argument to upload a photo.
+ *
+ * Accepts two formats:
+ *   - string  -> native URI (iOS/Android), wrapped by createCoverFile for RN FormData
+ *   - File    -> web File object from <input type="file">, appended directly to FormData
+ *
+ * Never set Content-Type manually — fetch adds the multipart boundary automatically.
  */
-export async function addBook(book: object, imageUri?: string | null) {
+export async function addBook(book: object, image?: string | File | null) {
   try {
-    if (!imageUri) {
+    if (!image) {
       return pb.collection("book").create(book);
     }
 
@@ -220,7 +225,14 @@ export async function addBook(book: object, imageUri?: string | null) {
         formData.append(key, String(value));
       }
     });
-    formData.append("cover", createCoverFile(imageUri));
+
+    if (image instanceof File) {
+      // Web: File object — append directly, browser FormData handles it natively
+      formData.append("cover", image);
+    } else {
+      // Native: URI string — wrap in RN-style { uri, name, type } object
+      formData.append("cover", createCoverFile(image));
+    }
 
     return pb.collection("book").create(formData);
   } catch (error) {

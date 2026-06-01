@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -17,25 +16,21 @@ import ThemedText from '@/components/ThemedText';
 import BookCover from '@/components/BookCover';
 import BackButton from '@/components/BackButton';
 import PrimaryButton from '@/components/PrimaryButton';
-import { getBook, getBookCoverUrl, returnBook, updateBookStatus } from '@/services/pocketbase';
+import {
+  getBook,
+  getBookCoverUrl,
+  returnBook,
+  updateBookStatus,
+} from '@/services/pocketbase';
 import { Book } from '@/components/BookGridCard';
 import { colors } from '@/constants/Colors';
 
-interface StarRatingProps {
-  rating: number;
-  onRate: (star: number) => void;
-}
-
-function StarRating({ rating, onRate }: StarRatingProps) {
+function StarRating({ rating, onRate }: any) {
   return (
     <View>
       <View style={starStyles.row}>
         {[1, 2, 3, 4, 5].map(star => (
-          <TouchableOpacity
-            key={star}
-            onPress={() => onRate(star)}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity key={star} onPress={() => onRate(star)}>
             <Ionicons
               name={star <= rating ? 'star' : 'star-outline'}
               size={36}
@@ -66,19 +61,19 @@ const starStyles = StyleSheet.create({
 
 function mapBook(item: any): Book {
   return {
-    id:          item.documentId ?? item.id.toString(),
-    title:       item.title       ?? '',
-    author:      item.author      ?? '',
-    coverUrl:    item.coverUrl    ?? '',
-    cover:       item.cover,
+    id: item.documentId ?? item.id.toString(),
+    title: item.title ?? '',
+    author: item.author ?? '',
+    coverUrl: item.coverUrl ?? '',
+    cover: item.cover,
     collectionId: item.collectionId,
     collectionName: item.collectionName,
-    state:      item.status      ?? 'available',
-    pages:       item.pages       ?? 0,
-    rating:      item.rating      ?? 0,
+    state: item.status ?? 'available',
+    pages: item.pages ?? 0,
+    rating: item.rating ?? 0,
     description: item.description ?? '',
-    borrowedBy:  item.borrowedBy,
-    borrowDate:  item.borrowDate,
+    borrowedBy: item.borrowedBy,
+    borrowDate: item.borrowDate,
   };
 }
 
@@ -88,10 +83,14 @@ export default function RateReviewScreen() {
     borrowId: string;
   }>();
 
-  const [book, setBook]         = useState<Book | null>(null);
-  const [loading, setLoading]   = useState(true);
-  const [rating, setRating]     = useState(0);
+  const [book, setBook] = useState<Book | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
+
+  // ✅ NEW UI STATE
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     loadBook();
@@ -102,7 +101,6 @@ export default function RateReviewScreen() {
     try {
       const data = await getBook(id);
       setBook(mapBook(data));
-    } catch {
     } finally {
       setLoading(false);
     }
@@ -129,39 +127,36 @@ export default function RateReviewScreen() {
 
   async function handleReturn() {
     if (rating === 0) {
-      Alert.alert(
-        'No Rating',
-        'Would you like to return without rating?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Return Anyway',
-            onPress: () => submitReturn(0, ''),
-          },
-        ]
-      );
+      setSuccessMessage('You are returning without rating');
+      setShowSuccess(true);
+
+      setTimeout(() => submitReturn(0, ''), 800);
       return;
     }
+
     submitReturn(rating, feedback);
   }
 
- async function submitReturn(stars: number, comment: string) {
-  try {
-    if (borrowId) {
-      await returnBook(borrowId, book!.id, stars, comment);
+  async function submitReturn(stars: number, comment: string) {
+    try {
+      if (borrowId) {
+        await returnBook(borrowId, book!.id, stars, comment);
+      }
+
+      await updateBookStatus(book!.id, 'available');
+
+      setSuccessMessage(`"${book!.title}" returned successfully`);
+      setShowSuccess(true);
+
+      setTimeout(() => {
+        router.back();
+      }, 1200);
+    } catch (e) {
+      console.log(e);
+      setSuccessMessage('Failed to return book. Try again.');
+      setShowSuccess(true);
     }
-
-    await updateBookStatus(book!.id, 'available');
-
-    Alert.alert(
-      'Book Returned!',
-      `Thank you for returning "${book!.title}"`,
-      [{ text: 'OK', onPress: () => router.back() }]
-    );
-  } catch {
-    Alert.alert('Error', 'Failed to return book. Try again.');
   }
-}
 
   return (
     <ThemedView showAmman={false}>
@@ -169,11 +164,7 @@ export default function RateReviewScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <BackButton onPress={() => router.back()} />
 
           <View style={styles.bookInfo}>
@@ -194,27 +185,46 @@ export default function RateReviewScreen() {
           <ThemedText variant="bookTitle" style={styles.sectionLabel}>
             Your feedback
           </ThemedText>
+
           <TextInput
             style={styles.feedbackInput}
             value={feedback}
             onChangeText={setFeedback}
             placeholder="What did you think about this book?"
             placeholderTextColor={colors.textDark + '50'}
-            multiline={true}
-            numberOfLines={5}
-            textAlignVertical="top"
-            autoCorrect={false}
+            multiline
           />
 
           <View style={styles.buttonContainer}>
-            <PrimaryButton
-              label="Return Book"
-              onPress={handleReturn}
-            />
+            <PrimaryButton label="Return Book" onPress={handleReturn} />
           </View>
-
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ✅ SUCCESS UI (NO ALERTS) */}
+      {showSuccess && (
+        <View style={successStyles.overlay}>
+          <View style={successStyles.box}>
+            <ThemedText variant="h3" center>
+              Success
+            </ThemedText>
+
+            <ThemedText center style={{ marginTop: 8 }}>
+              {successMessage}
+            </ThemedText>
+
+            <TouchableOpacity
+              style={successStyles.button}
+              onPress={() => {
+                setShowSuccess(false);
+                router.back();
+              }}
+            >
+              <ThemedText color="white">OK</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -241,15 +251,38 @@ const styles = StyleSheet.create({
   feedbackInput: {
     backgroundColor: colors.surface,
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: colors.textDark,
-    fontFamily: 'Lexend_400Regular',
+    padding: 14,
     minHeight: 120,
-    textAlignVertical: 'top',
+    color: colors.textDark,
   },
   buttonContainer: {
     marginTop: 32,
+  },
+});
+
+const successStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  box: {
+    width: 280,
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  button: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
   },
 });
