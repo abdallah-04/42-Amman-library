@@ -2,6 +2,12 @@
 
 A mobile + web app for borrowing and returning books from the 42 Amman campus library. Built with React Native (Expo) and a self-hosted PocketBase backend.
 
+## The idea
+
+The 42 Amman campus has a shelf of physical books, but no easy way to see what's there, who has what, or whether a book is any good. Borrowing relied on word of mouth.
+
+This app turns the shelf into a small digital library: students can see which books exist and whether they're available, borrow one with a 30-day timer, and leave a rating and review when they return it. Anyone can add a book to the shelf, so the collection grows with the community. The goal is a simple tool for the 42 Amman community, not an app-store release.
+
 ## Features
 
 - **Browse & search** the campus library in a grid, with pull-to-refresh
