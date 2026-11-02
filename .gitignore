@@ -40,5 +40,13 @@ yarn-error.*
 /ios
 /android
 
-
 .env
+
+# PocketBase runtime data, binary and logs (never commit the database)
+pb_data/
+pocketbase
+pocketbase.exe
+*.log
+
+# internal notes
+42-amman-library-project-context.md

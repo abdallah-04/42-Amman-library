@@ -7,16 +7,15 @@ import { Platform } from "react-native";
 
 const DEFAULT_PB_URL =
   Platform.select({
-    android: `http://192.168.1.15:8090`,
-    ios: `http://192.168.1.15:8090`,
+    android: "http://10.0.2.2:8090", // Android emulator -> host machine
+    ios: "http://localhost:8090",
     web: "http://localhost:8090",
-    default: `http://192.168.1.15:8090`,
-  }) ?? `http://192.168.1.15:8090`;
+    default: "http://localhost:8090",
+  }) ?? "http://localhost:8090";
 
 function normalizePocketBaseUrl(url?: string) {
   const trimmed = url?.trim();
   if (!trimmed) return DEFAULT_PB_URL;
-  if (trimmed.includes("192.168.1.15")) return DEFAULT_PB_URL;
 
   const withProtocol = /^https?:\/\//i.test(trimmed)
     ? trimmed
@@ -337,8 +336,6 @@ export async function getUserBorrows(intraLogin: string) {
       requestKey: null,
     });
 
-    console.log("[getUserBorrows] first record:", JSON.stringify(records[0], null, 2));
-
     return records.map(normalizeBorrow);
   } catch (error) {
     console.error("getUserBorrows error:", error);
@@ -391,7 +388,6 @@ export async function returnBook(
     const resolvedBookId = Array.isArray(bookId) ? bookId[0] : bookId;
 
     if (!resolvedBookId) throw new Error("bookId is empty");
-    console.log("📖 returnBook → borrowId:", borrowId, "bookId:", resolvedBookId);
 
     const book = await pb.collection("book").getOne(resolvedBookId, {
       requestKey: null,
